@@ -114,25 +114,115 @@ Dengan cara ini tidak perlu membaca seluruh fungsi yang ada di dalam binary.
 
 ---
 
-# 🧠 4. Analisis Fungsi
+# 🧠 4. Analisis Fungsi `main()`
 
-Decompiler Ghidra kemudian digunakan untuk membaca pseudocode dari fungsi yang ditemukan melalui XREF.
+Setelah menelusuri **Cross References (XREF)**, ditemukan bahwa proses validasi input dilakukan pada fungsi `main()`.
 
-Sebelum menganalisis logika program, dilakukan beberapa penyesuaian seperti mengubah **Function Signature** dan melakukan **Rename Variable** agar kode lebih mudah dipahami.
+Saat pertama kali dibuka menggunakan **Decompiler** Ghidra, fungsi tersebut masih menggunakan nama parameter dan variabel bawaan sehingga kode kurang mudah dipahami.
 
-Sebagai contoh:
+```c
+undefined8 main(int param_1, undefined8 *param_2)
+{
+    size_t sVar1;
 
-| Sebelum | Sesudah |
-|----------|----------|
-| `param_1` | `argc` |
-| `param_2` | `argv` |
-| `sVar1` | `panjang_str` |
+    if (param_1 == 2) {
+        sVar1 = strlen((char *)param_2[1]);
 
-Dengan nama parameter yang lebih deskriptif, alur validasi input menjadi lebih mudah dipahami.
+        if (sVar1 == 10) {
+            if (((char *)param_2[1])[4] == '@') {
+                puts("Nice Job!!");
+                printf("flag{%s}\n", param_2[1]);
+            }
+            else {
+                usage(*param_2);
+            }
+        }
+        else {
+            usage(*param_2);
+        }
+    }
+    else {
+        usage(*param_2);
+    }
+
+    return 0;
+}
+```
+
+Dari hasil dekompilasi tersebut terlihat bahwa fungsi menerima dua parameter (`param_1` dan `param_2`) serta menggunakan variabel lokal `sVar1`. Namun, nama-nama tersebut masih bersifat generik sehingga belum menggambarkan fungsi sebenarnya dari masing-masing variabel.
 
 > **Screenshot**
 
-![Decompiler](images/decompiler.png)
+![Decompiler Before](images/decompiler-before.png)
+
+---
+
+## Mengubah Function Signature
+
+Sebelum menganalisis logika program lebih lanjut, saya mengubah **Function Signature** agar mengikuti bentuk standar fungsi `main()` pada bahasa C.
+
+Dari:
+
+```c
+undefined8 main(int param_1, undefined8 *param_2)
+```
+
+Menjadi:
+
+```c
+int main(int argc, char **argv)
+```
+
+Perubahan ini mempermudah identifikasi bahwa fungsi menerima **command-line argument** sebagai input.
+
+---
+
+## Rename Variable
+
+Selain mengubah function signature, saya juga melakukan **Rename Variable** pada variabel yang masih menggunakan nama bawaan Ghidra.
+
+| Sebelum | Sesudah | Keterangan |
+|----------|----------|------------|
+| `param_1` | `argc` | Jumlah argument program |
+| `param_2` | `argv` | Array argument program |
+| `sVar1` | `panjang_str` | Menyimpan hasil fungsi `strlen()` |
+
+Setelah seluruh parameter dan variabel diberi nama yang lebih deskriptif, hasil dekompilasi menjadi lebih mudah dipahami.
+
+```c
+int main(int argc, char **argv)
+{
+    size_t panjang_str;
+
+    if (argc == 2) {
+        panjang_str = strlen(argv[1]);
+
+        if (panjang_str == 10) {
+            if (argv[1][4] == '@') {
+                puts("Nice Job!!");
+                printf("flag{%s}\n", argv[1]);
+            }
+            else {
+                usage(*argv);
+            }
+        }
+        else {
+            usage(*argv);
+        }
+    }
+    else {
+        usage(*argv);
+    }
+
+    return 0;
+}
+```
+
+Melalui proses perubahan **Function Signature** dan **Rename Variable**, struktur program menjadi jauh lebih mudah dipahami sehingga proses analisis terhadap logika validasi input dapat dilakukan dengan lebih efektif.
+
+> **Screenshot**
+
+![Decompiler After](images/decompiler-after.png)
 
 ---
 
