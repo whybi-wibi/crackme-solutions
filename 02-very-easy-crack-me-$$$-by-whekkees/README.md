@@ -97,7 +97,7 @@ Karena seluruh proses autentikasi berada pada fungsi tersebut, maka analisis dif
 
 > **Screenshot**
 
-![Cross Reference](images/03-xref-password.png)
+![Cross Reference](images/03-password-xref.png)
 
 ---
 
